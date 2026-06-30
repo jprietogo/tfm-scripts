@@ -8,52 +8,27 @@
 FoamFile
 {
     format      ascii;
-    class       volScalarField;
-    object      p;
+    class       dictionary;
+    object      surfaceFeaturesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+surfaces
+(
+     "propellerIbaizabal.stl"
+     "rotatingCylinder.stl"
+);
 
-internalField   uniform 0;
+// Identify a feature when angle between faces < includedAngle
+includedAngle       150;
 
-boundaryField
+subsetFeatures
 {
-    inlet
-    {
-        type            zeroGradient;
-    }
+    // Keep nonManifold edges (edges with >2 connected faces)
+    nonManifoldEdges       no;
 
-    outlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
-
-    top
-    {
-        type            symmetryPlane;
-    }
-    
-    bottom
-    {
-        type            symmetryPlane;
-    }
-
-    front
-    {
-        type            symmetryPlane;
-    }
-
-    back
-    {
-        type            symmetryPlane;
-    }
-
-    casco
-    {
-        type            zeroGradient;
-    }
+    // Keep open edges (edges with 1 connected face)
+    openEdges       yes;
 }
 
 // ************************************************************************* //

@@ -8,52 +8,29 @@
 FoamFile
 {
     format      ascii;
-    class       volScalarField;
-    object      p;
+    class       dictionary;
+    object      decomposeParDict;
 }
+
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
 
-internalField   uniform 0;
+numberOfSubdomains 16;
 
-boundaryField
-{
-    inlet
-    {
-        type            zeroGradient;
-    }
+method            scotch;
 
-    outlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
+//method          hierarchical;
 
-    top
-    {
-        type            symmetryPlane;
-    }
+//hierarchicalCoeffs
+//{
+    // Descomposición anisotrópica adaptada a geometría del dominio
+    // Dominio: 550m (x) x 300m (y) x 106m (z)
+    // Ratio: 5.2 : 2.8 : 1
     
-    bottom
-    {
-        type            symmetryPlane;
-    }
+//    n		(4 4 2);	// 4x4x2 = 32 subdominios
 
-    front
-    {
-        type            symmetryPlane;
-    }
-
-    back
-    {
-        type            symmetryPlane;
-    }
-
-    casco
-    {
-        type            zeroGradient;
-    }
-}
+//    order	xyz;
+//    delta	0.001;
+//}
 
 // ************************************************************************* //

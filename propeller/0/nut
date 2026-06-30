@@ -25,33 +25,70 @@ boundaryField
         type            calculated;
         value           uniform 0;
     }
+    
     outlet
     {
         type            calculated;
         value           uniform 0;
     }
+    
     top
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     bottom
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     front
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     back
     {
-        type            symmetryPlane;
-    }
-    casco
-    {
-        type            nutkWallFunction;
-	value           uniform 0;
+        type            slip;
     }
 
+    // -- Sólidos -------------------------------------------------------
+    
+    propeller
+    {
+        type            nutkWallFunction;
+    	value           uniform 0;
+    }
+
+    cylinder
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    cylinder_slave
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    // -- Interfaz NCC: patches de pared simple -------------------------
+    
+    rotatingZoneInner
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    rotatingZoneOuter
+    {
+        type            calculated;
+        value           uniform 0;
+    }
+
+    // -- Patches nonConformalCyclic ------------------------------------
+
+    #includeEtc "caseDicts/setConstraintTypes"
 }
 
 

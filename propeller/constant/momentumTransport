@@ -8,52 +8,20 @@
 FoamFile
 {
     format      ascii;
-    class       volScalarField;
-    object      p;
+    class       dictionary;
+    location    "constant";
+    object      momentumTransport;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+simulationType RAS;
 
-internalField   uniform 0;
-
-boundaryField
+RAS
 {
-    inlet
-    {
-        type            zeroGradient;
-    }
+    model           kOmegaSST;
 
-    outlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
-
-    top
-    {
-        type            symmetryPlane;
-    }
-    
-    bottom
-    {
-        type            symmetryPlane;
-    }
-
-    front
-    {
-        type            symmetryPlane;
-    }
-
-    back
-    {
-        type            symmetryPlane;
-    }
-
-    casco
-    {
-        type            zeroGradient;
-    }
+    turbulence      on;
+    printCoeffs     on;
 }
 
 // ************************************************************************* //

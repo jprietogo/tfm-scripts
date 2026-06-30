@@ -1,0 +1,105 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volVectorField;
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (-7.46 0 0);
+
+boundaryField
+{
+    inlet
+    {
+        type            timeVaryingMappedFixedValue;
+
+	// No promediar, se quiere capturar la estela completa
+	setAverage      off;
+
+	// Método de interpolación
+	mapMethod       planarInterpolation;
+
+	offset          (0 0 0);
+	
+        value           uniform (-7.46 0 0);
+    }
+    
+    outlet
+    {
+        type            inletOutlet;
+	inletValue      uniform (-7.46 0 0);
+	value	        uniform (-7.46 0 0);
+    }
+    
+    front
+    {
+        type            slip;
+    }
+    
+    back
+    {
+        type            slip;
+    }
+    
+    bottom
+    {
+        type            slip;
+    }
+    
+    top
+    {
+        type            slip;
+    }
+
+    // -- Sólidos --------------------------------------------------
+    
+    propeller
+    {
+        type            movingWallVelocity;
+	value           uniform (0 0 0);
+    }
+
+    cylinder
+    {
+        type            movingWallSlipVelocity;
+        value           uniform (0 0 0);
+    }
+
+    cylinder_slave
+    {
+        type            movingWallSlipVelocity;
+        value           uniform (0 0 0);
+    }
+    // -- Interfaz NCC: patches de pared simple --------------------
+    // Estos patches están en la superficie del cilindro rotante
+    // Con solapamiento total se usa movingWallSlipVelocity (deslizamiento libre)
+
+    rotatingZoneInner
+    {
+        type            movingWallSlipVelocity;
+        value           uniform (0 0 0);
+    }
+
+    rotatingZoneOuter
+    {
+        type            movingWallSlipVelocity;
+        value           uniform (0 0 0);
+    }
+
+    // -- Patches nonConformalCyclic (creados por createNonConformalCouples) --
+    // Se inicializan via #includeEtc para evitar tener que listarlos
+    // manualmente (sus nombres incluyen prefijos generados automaticamente)
+
+    #includeEtc "caseDicts/setConstraintTypes"
+}
+// ************************************************************************* //

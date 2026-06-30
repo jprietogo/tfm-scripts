@@ -7,53 +7,38 @@
 \*---------------------------------------------------------------------------*/
 FoamFile
 {
+    version     2.0;
     format      ascii;
-    class       volScalarField;
-    object      p;
+    class       dictionary;
+    location    "system";
+    object      createBafflesDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
+internalFacesOnly  true;
 
-internalField   uniform 0;
-
-boundaryField
+baffles
 {
-    inlet
+    NCCInterface
     {
-        type            zeroGradient;
-    }
+	type		faceZone;
+	zoneName	NCCInterface;
 
-    outlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
+	patches
+    	{
+	    owner
+	    {
+		name	rotatingZoneOuter;
+		type 	wall;
+	    }
 
-    top
-    {
-        type            symmetryPlane;
-    }
-    
-    bottom
-    {
-        type            symmetryPlane;
-    }
-
-    front
-    {
-        type            symmetryPlane;
-    }
-
-    back
-    {
-        type            symmetryPlane;
-    }
-
-    casco
-    {
-        type            zeroGradient;
-    }
+	    neighbour
+	    {
+		name	rotatingZoneInner;
+		type	wall;
+	    }
+        }
+    }       
 }
 
 // ************************************************************************* //

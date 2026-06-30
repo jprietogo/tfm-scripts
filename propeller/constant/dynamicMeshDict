@@ -8,52 +8,28 @@
 FoamFile
 {
     format      ascii;
-    class       volScalarField;
-    object      p;
+    class       dictionary;
+    location    "constant";
+    object      dynamicMeshDict;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-dimensions      [0 2 -2 0 0 0 0];
-
-internalField   uniform 0;
-
-boundaryField
+mover
 {
-    inlet
-    {
-        type            zeroGradient;
-    }
-
-    outlet
-    {
-        type            fixedValue;
-        value           uniform 0;
-    }
-
-    top
-    {
-        type            symmetryPlane;
-    }
+    type			motionSolver;
     
-    bottom
-    {
-        type            symmetryPlane;
-    }
+    libs			("libfvMotionSolvers.so");
+    
+    motionSolver		solidBody;
+    
+    cellZone			rotatingZone;
 
-    front
-    {
-        type            symmetryPlane;
-    }
+    solidBodyMotionFunction	rotatingMotion;
 
-    back
-    {
-        type            symmetryPlane;
-    }
+    origin			(0 0 0);
+    axis			(1 0 0);
 
-    casco
-    {
-        type            zeroGradient;
-    }
+    omega			70.8 [rpm];
 }
 
 // ************************************************************************* //

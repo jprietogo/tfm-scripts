@@ -49,7 +49,7 @@ boundaryField
     {
         type            symmetryPlane;
     }
-    cIbai
+    casco
     {
         type            noSlip;
     }

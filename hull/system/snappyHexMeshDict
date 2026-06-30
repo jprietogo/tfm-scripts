@@ -27,11 +27,11 @@ addLayers       true;
 
 geometry
 {
-    "cascoIbai_cerr.stl"
+    "casco.stl"
     {
         type triSurfaceMesh;
-        name cIbai;
-        file "cascoIbai_cerr.stl";
+        name casco;
+        file "casco.stl";
     }
 
     nearBodyBox
@@ -53,14 +53,14 @@ castellatedMeshControls
     features
     (
 	{
-	    file "cascoIbai_cerr.eMesh";
+	    file "casco.eMesh";
 	    level 3;
 	}
     );
 
     refinementSurfaces
     {
-	cIbai
+	casco
 	{
 	    level (3 4);
 	    patchInfo

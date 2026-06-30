@@ -16,40 +16,74 @@ FoamFile
 
 dimensions      [0 0 -1 0 0 0 0];
 
-internalField   uniform 0.0101;
+internalField   uniform 0.167;
 
 boundaryField
 {
     inlet
     {
         type            fixedValue;
-        value           uniform 0.0101;
+        value           uniform 0.167;
     }
+    
     outlet
     {
         type            zeroGradient;
     }
+    
     top
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     bottom
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     front
     {
-        type            symmetryPlane;
+        type            slip;
     }
+    
     back
     {
-        type            symmetryPlane;
+        type            slip;
     }
-    casco
+
+    // -- Sólidos -------------------------------------------------------
+    
+    propeller
     {
         type            omegaWallFunction;
-        value           uniform 0.0101;
+        value           uniform 0.167;
     }
+
+    cylinder
+    {
+        type            zeroGradient;
+    }
+
+    cylinder_slave
+    {
+        type            zeroGradient;
+    }
+
+    // -- Interfaz NCC: patches de pared simple -------------------------
+    
+    rotatingZoneInner
+    {
+        type            zeroGradient;
+    }
+
+    rotatingZoneOuter
+    {
+        type            zeroGradient;
+    }
+
+    // -- Patches nonConformalCyclic (creados por createNonConformalCouples) --
+
+    #includeEtc "caseDicts/setConstraintTypes"
 }
 
 

@@ -9,22 +9,13 @@ FoamFile
 {
     format      ascii;
     class       dictionary;
-    object      surfaceFeaturesDict;
+    location    "constant";
+    object      physicalProperties;
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-surfaces ("casco.stl");
+viscosityModel  constant;
 
-// Identify a feature when angle between faces < includedAngle
-includedAngle       150;
-
-subsetFeatures
-{
-    // Keep nonManifold edges (edges with >2 connected faces)
-    nonManifoldEdges       no;
-
-    // Keep open edges (edges with 1 connected face)
-    openEdges       yes;
-}
+nu              [0 2 -1 0 0 0 0] 1.188e-06;
 
 // ************************************************************************* //
