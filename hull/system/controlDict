@@ -1,0 +1,138 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+startTime       0;
+
+stopAt          endTime;
+endTime         600;
+
+deltaT          0.01;
+
+adjustTimeStep  no;
+//maxCo           0.3;
+//maxDeltaT       0.005;
+
+writeControl    adjustableRunTime;
+writeInterval   50;
+
+purgeWrite      0;
+
+writeFormat     binary;
+writePrecision  8;
+
+timeFormat      general;
+timePrecision   6;
+
+runTimeModifiable true;
+
+// =====================================================================
+// FUNCIONES DE POST-PROCESAMIENTO
+// =====================================================================
+
+functions
+{
+    forceCoeffs
+    {
+        type            forceCoeffs;
+        libs            ("libforces.so");
+        patches         (cIbai);
+        rho             rhoInf;
+        rhoInf          1025;
+        log             yes;
+        writeControl    timeStep;
+        writeInterval   10;
+        liftDir         (0 0 1);        // Y: dirección perpendicular al flujo
+        dragDir         (1 0 0);        // X: dirección del flujo
+        pitchAxis       (0 1 0);        // Z: eje axial del cilindro
+        magUInf         7.46;          	// Velocidad de avance [m/s]
+        lRef            264.75;          	// Eslora [m]
+        Aref            4236;        	// Área de referencia [m²]
+        CofR            (137 0 -8);
+    }
+
+// Monitorear residuales
+    residuals
+    {
+        type            residuals;
+        libs            ("libutilityFunctionObjects.so");
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (U p k omega);
+    }
+
+// =====================================================================
+// CAMPO y+
+// =====================================================================
+
+   yplus
+   {
+       type		yPlus;
+       libs		("libfieldFunctionObjects.so");
+       writeControl	writeTime;
+   }
+
+// =====================================================================
+// CALCULO DE VORTICIDAD
+// =====================================================================
+
+   vorticity
+   {
+       type		vorticity;
+       libs		("libfieldFunctionObjects.so");
+       writeControl	writeTime;
+   }
+
+// =====================================================================
+// CRITERIO Q
+// =====================================================================
+
+   Q
+   {
+       type		Q;
+       libs		("libfieldFunctionObjects.so");
+       writeControl	writeTime;
+   }
+
+   fieldAverage
+   {
+       type            fieldAverage;
+       libs            ("libfieldFunctionObjects.so");
+       writeControl    writeTime;
+       timeStart       150;
+
+       fields
+       (
+	   U
+	   {
+	       mean          on;
+	       prime2Mean    on;
+	       base          time;
+	   }
+	   p
+	   {
+	       mean          on;
+	       prime2Mean    on;
+	       base          time;
+	   }
+       );
+   }
+}
+
+
+// ************************************************************************* //

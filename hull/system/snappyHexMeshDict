@@ -1,0 +1,150 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+//---------------------------------------------------------------------------//
+// General switches
+//---------------------------------------------------------------------------//
+
+castellatedMesh true;
+snap            true;
+addLayers       true;
+
+//---------------------------------------------------------------------------//
+// Geometry
+//---------------------------------------------------------------------------//
+
+geometry
+{
+    "cascoIbai_cerr.stl"
+    {
+        type triSurfaceMesh;
+        name cIbai;
+        file "cascoIbai_cerr.stl";
+    }
+
+    nearBodyBox
+    {
+	type box;
+	min (-30 -45 -50);
+	max (320  45  -2);
+    }
+}
+
+castellatedMeshControls
+{
+    maxLocalCells	2000000;
+    maxGlobalCells	120000000;
+    minRefinementCells	10;
+    maxLoadUnbalance	0.10;
+    nCellsBetweenLevels	4;
+
+    features
+    (
+	{
+	    file "cascoIbai_cerr.eMesh";
+	    level 3;
+	}
+    );
+
+    refinementSurfaces
+    {
+	cIbai
+	{
+	    level (3 4);
+	    patchInfo
+	    {
+		type wall;
+	    }
+	}
+    }
+
+    refinementRegions
+    {
+	nearBodyBox
+	{
+	    mode inside;
+	    levels ((1E15 2));
+	}
+    }
+
+    resolveFeatureAngle 30;
+    locationInMesh (120 0 -50);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    nSmoothPatch		5;
+    tolerance			1.5;
+    nSolveIter			50;
+    nRelaxIter			8;
+    nFeatureSnapIter		15;
+    implicitFeatureSnap		false;
+    explicitFeatureSnap		true;
+    multiRegionFeatureSnap	false;
+}
+
+addLayersControls
+{
+    relativeSizes	true;
+
+    layers
+    {
+	cIbai
+	{
+	    nSurfaceLayers	12;
+	}
+    }
+
+    expansionRatio		1.15;
+    finalLayerThickness		0.40;
+    minThickness		0.03;
+    nGrow			0;
+
+    featureAngle		80;
+    nRelaxIter			8;
+    nLayerIter			100;
+    nSmoothSurfaceNormals	3;
+    nSmoothNormals		5;
+    nSmoothThickness		15;
+    maxFaceThicknessRatio	0.6;
+    maxThicknessToMedialRatio	0.4;
+    minMedianAxisAngle		80;
+    nBufferCellsNoExtrude	0;
+}
+
+meshQualityControls
+{
+    maxNonOrtho		60;
+    maxBoundarySkewness	4;
+    maxInternalSkewness	2;
+    maxConcave		70;
+
+    minVol		1e-16;
+    minTetQuality	1e-20;
+    minArea		-1;
+    minTwist		0.01;
+    minDeterminant	0.005;
+    minFaceWeight	0.05;
+    minVolRatio		0.05;
+    minTriangleTwist	-1;
+    nSmoothScale	6;
+    errorReduction	0.7;
+}
+
+debug	0;
+mergeTolerance	1e-6;
+
+// ************************************************************************* //
