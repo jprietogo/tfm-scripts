@@ -8,7 +8,7 @@ from openfoam_fwh_adapter import fwh1a_arrays_from_openfoam
 
 # CONFIGURACIÓN VALORES INICIALES MODELO
 class Config:
-    dir_surface = r"C:/Users/jaime/Documents/Universidad/Master/25-26/TFM/Simulaciones/acus_H/postProcessing/fwhSurface"
+    dir_surface = r"C:/Users/jaime/Desktop/prop/laminar/postProcessing/fwhSurface"
     surfNom_cont = "propellerFWHSolid"
 
     press = "p"
@@ -18,7 +18,7 @@ class Config:
     c0 = 1482.0
     p_ref = 1e-6
 
-    t_ini = 0
+    t_ini = 3.388
     t_fin = 8.47
 
     vel_mode = "rotacion"  # "movimiento" o "rotacion"
@@ -28,15 +28,28 @@ class Config:
     eje_rotacion = (1.0, 0.0, 0.0)
     origen_rotacion = (0.0, 0.0, 0.0)
 
+    # Receptores de directividad: corona en el plano yz, eje x fijo.
+    radio_corona = 275.0
+    x_corona = 0.0
+    angulos_corona_deg = np.arange(0.0, 360.0, 30.0)
+
     # DEFINICIÓN PUNTOS OBSERVADORES
-    obs = np.array([
+    obs_corona = np.column_stack([
+        np.full_like(angulos_corona_deg, x_corona, dtype=float),
+        radio_corona * np.cos(np.deg2rad(angulos_corona_deg)),
+        radio_corona * np.sin(np.deg2rad(angulos_corona_deg)),
+    ])
+
+    obs_axiales = np.array([
         [275.0, 0.0, 0.0],
         [-275.0, 0.0, 0.0],
         [550.0, 0.0, 0.0],
         [-550.0, 0.0, 0.0],
     ])
 
-    dir_results = r"C:/Users/jaime/Documents/Universidad/Master/25-26/TFM/Simulaciones/acus_H/acoustic_results"
+    obs = np.vstack([obs_corona, obs_axiales])
+
+    dir_results = r"C:/Users/jaime/Desktop/prop/laminar/acoustic_results"
 
 # PREPARACIÓN DATOS HIDRODINÁMICOS PARA CÁLCULO ACÚSTICO
 def prep_inputs(tiempos, y, n, area, p, v):
@@ -153,7 +166,7 @@ def calc_spl(senal):
     # Se elimina offset/DC antes del RMS acustico.
     senal_fluct = senal - np.mean(senal)
 
-    rms = np.sqrt(np.mean(senal**2))
+    rms = np.sqrt(np.mean(senal_fluct**2))
     return 20.0 * np.log10(max(rms, 1e-300) / Config.p_ref)
 
 # CÁLCULO ESPECTRO DE POTENCIA MEDIANTE WELCH
@@ -203,6 +216,119 @@ def calc_fft_prms(tiempos, senal):
 
     return freqs, prms
 
+def calc_spl_tonal_fft(tiempos, senal, freq_objetivo):
+    freqs, prms = calc_fft_prms(tiempos, senal)
+
+    idx = np.argmin(np.abs(freqs - freq_objetivo))
+    freq_bin = freqs[idx]
+    prms_bin = prms[idx]
+
+    spl = 20.0 * np.log10(max(prms_bin, 1e-300) / Config.p_ref)
+
+    return spl, freq_bin, prms_bin
+
+
+def plot_directividad_polar(angulos_deg, spl_vals, freq, nombre_archivo):
+    theta = np.deg2rad(angulos_deg)
+    spl_vals = np.asarray(spl_vals, dtype=float)
+
+    theta_cerrado = np.r_[theta, theta[0]]
+    spl_cerrado = np.r_[spl_vals, spl_vals[0]]
+
+    rmin = 5.0 * np.floor((np.min(spl_vals) - 5.0) / 5.0)
+    rmax = 5.0 * np.ceil((np.max(spl_vals) + 5.0) / 5.0)
+
+    fig, ax = plt.subplots(subplot_kw={"projection": "polar"})
+    ax.plot(theta_cerrado, spl_cerrado, marker="o")
+    ax.set_theta_zero_location("N")
+    ax.set_theta_direction(-1)
+    ax.set_rlim(rmin, rmax)
+    ax.set_title(f"Directividad tonal a {freq:.2f} Hz")
+    #ax.set_ylabel("SPL [dB re 1 uPa]")
+    ax.text(
+        -0.15, 0.5,
+        "SPL [dB re 1 uPa]",
+        transform=ax.transAxes,
+        rotation=90,
+        va="center",
+        ha="center",
+    )
+    ax.grid(True)
+
+    plt.tight_layout()
+    plt.savefig(nombre_archivo, dpi=200)
+    plt.close()
+
+
+#def plot_decaimiento_axial(obs_axiales, spl_vals, nombre_archivo):
+#    obs_axiales = np.asarray(obs_axiales, dtype=float)
+#    spl_vals = np.asarray(spl_vals, dtype=float)
+
+#    dist = np.linalg.norm(obs_axiales - np.asarray(Config.origen_rotacion), axis=1)
+
+#    order = np.argsort(dist)
+#    dist = dist[order]
+#    spl_vals = spl_vals[order]
+
+#    dist_ref = dist[0]
+#    spl_ref = spl_vals[0]
+#    ref_6db = spl_ref - 20.0 * np.log10(dist / dist_ref)
+
+#    plt.figure()
+#    plt.plot(dist, spl_vals, "o-", label="FWH")
+#    plt.plot(dist, ref_6db, "--", label="-6 dB por duplicacion")
+#    plt.xlabel("Distancia al disco de la helice [m]")
+#    plt.ylabel("SPL [dB re 1 uPa]")
+#    plt.grid(True)
+#    plt.legend()
+#    plt.tight_layout()
+#    plt.savefig(nombre_archivo, dpi=200)
+#    plt.close()
+
+def plot_decaimiento_axial(obs_axiales, spl_vals, nombre_archivo):
+    obs_axiales = np.asarray(obs_axiales, dtype=float)
+    spl_vals = np.asarray(spl_vals, dtype=float)
+
+    x = obs_axiales[:, 0]
+    dist = np.abs(x)
+
+    plt.figure()
+
+    for signo, etiqueta in [(1, "aguas arriba"), (-1, "aguas abajo")]:
+        mask = np.sign(x) == signo
+
+        if np.count_nonzero(mask) == 0:
+            continue
+
+        dist_lado = dist[mask]
+        spl_lado = spl_vals[mask]
+
+        order = np.argsort(dist_lado)
+        dist_lado = dist_lado[order]
+        spl_lado = spl_lado[order]
+
+        plt.plot(dist_lado, spl_lado, "o-", label=f"FWH {etiqueta}")
+
+        if len(dist_lado) >= 2:
+            dist_ref = dist_lado[0]
+            spl_ref = spl_lado[0]
+            ref_6db = spl_ref - 20.0 * np.log10(dist_lado / dist_ref)
+
+            plt.plot(
+                dist_lado,
+                ref_6db,
+                "--",
+                label=f"-6 dB por duplicacion {etiqueta}",
+            )
+
+    plt.xlabel("Distancia axial al disco de la helice [m]")
+    plt.ylabel("SPL BPF [dB re 1 uPa]")
+    plt.grid(True)
+    plt.legend()
+    plt.tight_layout()
+    plt.savefig(nombre_archivo, dpi=200)
+    plt.close()
+
 # CÁLCULO DE FRECUENCIA DE PASO DE PALA Y ARMÓNICOS
 def frec_paso_pala():
     eje = Config.rpm / 60.0
@@ -239,6 +365,15 @@ def main():
     print("v:", v.shape)
     print("Frecuencias:", frec_paso_pala())
 
+    frecs = frec_paso_pala()
+    bpf = frecs["BPF"]
+    bpf2 = frecs["2BPF"]
+
+    p_acus_list = []
+    spl_global_list = []
+    spl_bpf_list = []
+    spl_2bpf_list = []
+
     for i, observer in enumerate(Config.obs, start=1):
         print(f"\nObservador {i}: {observer}")
 
@@ -256,8 +391,17 @@ def main():
         freqs_welch, espectro = calc_espectro(tiempos, p_acus)
         freqs_fft, prms_fft = calc_fft_prms(tiempos, p_acus)
 
-        print(f"SPL = {spl:.2f} dB re 1 uPa")
-        #print(freqs_fft)
+        spl_bpf, freq_bpf_bin, _ = calc_spl_tonal_fft(tiempos, p_acus, bpf)
+        spl_2bpf, freq_2bpf_bin, _ = calc_spl_tonal_fft(tiempos, p_acus, bpf2)
+
+        p_acus_list.append(p_acus)
+        spl_global_list.append(spl)
+        spl_bpf_list.append(spl_bpf)
+        spl_2bpf_list.append(spl_2bpf)
+
+        print(f"SPL global = {spl:.2f} dB re 1 uPa")
+        print(f"SPL BPF = {spl_bpf:.2f} dB re 1 uPa, bin {freq_bpf_bin:.3f} Hz")
+        print(f"SPL 2BPF = {spl_2bpf:.2f} dB re 1 uPa, bin {freq_2bpf_bin:.3f} Hz")
 
         np.savetxt(
             os.path.join(Config.dir_results, f"obs_{i}_press.csv"),
@@ -270,7 +414,7 @@ def main():
         plt.figure()
         plt.plot(tiempos, p_acus)
         plt.xlabel("Tiempo [s]")
-        plt.ylabel("Presión acústica [Pa]")
+        plt.ylabel("Presion acustica [Pa]")
         plt.grid(True)
         plt.tight_layout()
         plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_press.png"), dpi=200)
@@ -285,23 +429,121 @@ def main():
         plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_espectro.png"), dpi=200)
         plt.close()
 
-        # Para escala logaritmica hay que eliminar f = 0.
         mask = freqs_fft > 0
-        
+
         plt.figure()
         plt.plot(freqs_fft[mask], prms_fft[mask])
         plt.xlabel("Frecuencia [Hz]")
-        plt.ylabel("Presión RMS espectral [Pa]")
+        plt.ylabel("Presion RMS espectral [Pa]")
         plt.xscale("log")
         plt.yscale("log")
-        
+
         ax = plt.gca()
         ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{x:g}"))
-        
+
         plt.grid(True, which="both")
         plt.tight_layout()
         plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_fft_prms.png"), dpi=200)
         plt.close()
+
+    n_corona = len(Config.obs_corona)
+
+    spl_bpf_corona = np.asarray(spl_bpf_list[:n_corona])
+    spl_2bpf_corona = np.asarray(spl_2bpf_list[:n_corona])
+
+    plot_directividad_polar(
+        Config.angulos_corona_deg,
+        spl_bpf_corona,
+        bpf,
+        os.path.join(Config.dir_results, "directividad_BPF.png"),
+    )
+
+    plot_directividad_polar(
+        Config.angulos_corona_deg,
+        spl_2bpf_corona,
+        bpf2,
+        os.path.join(Config.dir_results, "directividad_2BPF.png"),
+    )
+
+    spl_axiales = np.asarray(spl_bpf_list[n_corona:])
+
+    plot_decaimiento_axial(
+        Config.obs_axiales,
+        spl_axiales,
+        os.path.join(Config.dir_results, "decaimiento_axial_BPF.png"),
+    )
+
+    np.savetxt(
+        os.path.join(Config.dir_results, "directividad_BPF.csv"),
+        np.column_stack([Config.angulos_corona_deg, spl_bpf_corona, spl_2bpf_corona]),
+        delimiter=",",
+        header="angulo_deg,SPL_BPF_dB_re_1uPa,SPL_2BPF_dB_re_1uPa",
+        comments="",
+    )
+
+    #for i, observer in enumerate(Config.obs, start=1):
+    #    print(f"\nObservador {i}: {observer}")
+
+    #    p_acus = calc_press_fwh1a(
+    #        tiempos=tiempos,
+    #        y=y,
+    #        n=n,
+    #        area=area,
+    #        p=p,
+    #        v=v,
+    #        obs=observer,
+    #    )
+
+    #    spl = calc_spl(p_acus)
+    #    freqs_welch, espectro = calc_espectro(tiempos, p_acus)
+    #    freqs_fft, prms_fft = calc_fft_prms(tiempos, p_acus)
+
+    #    print(f"SPL = {spl:.2f} dB re 1 uPa")
+    #    #print(freqs_fft)
+
+    #    np.savetxt(
+    #        os.path.join(Config.dir_results, f"obs_{i}_press.csv"),
+    #        np.column_stack([tiempos, p_acus]),
+    #        delimiter=",",
+    #        header="time,p_acus_Pa",
+    #        comments="",
+    #    )
+
+    #    plt.figure()
+    #    plt.plot(tiempos, p_acus)
+    #    plt.xlabel("Tiempo [s]")
+    #    plt.ylabel("Presión acústica [Pa]")
+    #    plt.grid(True)
+    #    plt.tight_layout()
+    #    plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_press.png"), dpi=200)
+    #    plt.close()
+
+    #    plt.figure()
+    #    plt.plot(freqs_welch, espectro)
+    #    plt.xlabel("Frecuencia [Hz]")
+    #    plt.ylabel("Nivel PSD [dB re 1 uPa^2/Hz]")
+    #    plt.grid(True)
+    #    plt.tight_layout()
+    #    plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_espectro.png"), dpi=200)
+    #    plt.close()
+
+        # Para escala logaritmica hay que eliminar f = 0.
+    #    mask = freqs_fft > 0
+        
+    #    plt.figure()
+    #    plt.plot(freqs_fft[mask], prms_fft[mask])
+    #    plt.xlabel("Frecuencia [Hz]")
+    #    plt.ylabel("Presión RMS espectral [Pa]")
+    #    plt.xscale("log")
+    #    plt.yscale("log")
+        
+    #    ax = plt.gca()
+    #    ax.xaxis.set_major_formatter(FuncFormatter(lambda x, pos: f"{x:g}"))
+        
+    #    plt.grid(True, which="both")
+    #    plt.tight_layout()
+    #    plt.savefig(os.path.join(Config.dir_results, f"obs_{i}_fft_prms.png"), dpi=200)
+    #    plt.close()
 
 if __name__ == "__main__":
     main()
