@@ -1,0 +1,45 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "system";
+    object      sampleDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+type   	       	 surfaces;
+libs		 ("libsampling.so");
+
+surfaceFormat	 vtk;
+
+interpolationScheme	cellPoint;
+
+// Campos a extraer
+fields (U p);
+
+surfaces
+{
+    planoHelice
+    {
+	type	cuttingPlane;
+
+	planeType	pointAndNormal;
+
+	// Plano ligeramente aguas arriba de la hélice
+	// Se recomienda 0.3-0.5m antes del centro
+	point 		(2.5 0 10.9);
+	normal		(-1 0 0);
+
+	interpolation	true;
+    }
+}
+
+// ************************************************************************* //

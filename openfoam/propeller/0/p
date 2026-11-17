@@ -1,0 +1,96 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       volScalarField;
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    inlet
+    {
+        type            timeVaryingMappedFixedValue;
+	setAverage      off;
+	mapMethod       planarInterpolation;
+	offset          0;
+	value           uniform 0;
+    }
+
+    outlet
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+
+    front
+    {
+        type            slip;
+    }
+
+    back
+    {
+        type            slip;
+    }
+
+    bottom
+    {
+        type            slip;
+    }
+
+    top
+    {
+        type            slip;
+    }
+
+    // -- Sólidos -------------------------------------------------------
+    
+    propeller
+    {
+        type            zeroGradient;
+    }
+
+    cylinder
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+
+    cylinder_slave
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+
+    // -- Interfaz NCC: patches de pared simple -------------------------
+    // fixedFluxPressure asegura consistencia con el flujo en la malla móvil
+    
+    rotatingZoneInner
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+
+    rotatingZoneOuter
+    {
+        type            fixedFluxPressure;
+        value           uniform 0;
+    }
+
+    // -- Patches nonConformalCyclic (creados por createNonConformalCouples) --
+
+    #includeEtc "caseDicts/setConstraintTypes"
+}
+
+// ************************************************************************* //

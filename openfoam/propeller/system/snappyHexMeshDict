@@ -1,0 +1,172 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      snappyHexMeshDict;
+}
+
+//---------------------------------------------------------------------------//
+// General switches
+//---------------------------------------------------------------------------//
+
+castellatedMesh true;
+snap            true;
+addLayers       false;
+
+//---------------------------------------------------------------------------//
+// Geometry
+//---------------------------------------------------------------------------//
+
+geometry
+{
+    propellerIbaizabal.stl
+    {
+        type triSurfaceMesh;
+        name propeller;
+	file "propellerIbaizabal.stl";
+    }
+
+    rotatingCylinder.stl
+    {
+        type triSurfaceMesh;
+        name cylinder;
+	file "rotatingCylinder.stl";
+    }
+}
+
+//---------------------------------------------------------------------------//
+// Castellated mesh controls
+//---------------------------------------------------------------------------//
+
+castellatedMeshControls
+{
+    maxLocalCells 20000000;
+    maxGlobalCells 300000000;
+    minRefinementCells 10;
+    maxLoadUnbalance 0.10;
+    nCellsBetweenLevels 4;
+ 
+    features
+    (
+ 	{
+            file "propellerIbaizabal.eMesh";
+            level 2;  // Refinamiento en los bordes afilados
+        }
+    );
+
+    refinementSurfaces
+    {
+        propeller
+        {
+            level (2 3);
+            patchInfo
+            {
+                type wall;
+            }
+        }
+
+	cylinder
+	{
+	    level (2 3);
+	    cellZone rotatingZone;
+	    faceZone NCCInterface;
+	    cellZoneInside inside;
+	}
+    }
+
+    // Resolve sharp angles (típicamente 30)
+    resolveFeatureAngle 30;
+
+    // Punto claramente dentro del fluido
+    locationInMesh (10 10 -15);
+
+    allowFreeStandingZoneFaces true;
+}
+
+//---------------------------------------------------------------------------//
+// Snap controls
+//---------------------------------------------------------------------------//
+
+snapControls
+{
+    nSmoothPatch 3;
+    tolerance 2.0;
+    nSolveIter 30;
+    nRelaxIter 5;
+    nFeatureSnapIter 10;
+    implicitFeatureSnap false;
+    explicitFeatureSnap true;
+    multiRegionFeatureSnap false;
+}
+
+//---------------------------------------------------------------------------//
+// Add layers controls
+//---------------------------------------------------------------------------//
+
+addLayersControls
+{
+    relativeSizes true;
+
+    layers
+    {
+        propeller
+	{
+	    nSurfaceLayers 5;
+	}
+    }
+
+    expansionRatio 1.12;
+    finalLayerThickness 0.35;
+    minThickness 0.03;
+    nGrow 0;
+
+    featureAngle 80;
+    nRelaxIter 8;
+    nLayerIter 100;
+    nSmoothSurfaceNormals 3;
+    nSmoothNormals 5;
+    nSmoothThickness 15;
+    maxFaceThicknessRatio 0.6;
+    maxThicknessToMedialRatio 0.4;
+    minMedianAxisAngle 80;
+    nBufferCellsNoExtrude 0;
+}
+
+//---------------------------------------------------------------------------//
+// Mesh quality controls
+//---------------------------------------------------------------------------//
+
+meshQualityControls
+{
+    maxNonOrtho 60;
+    maxBoundarySkewness 12;
+    maxInternalSkewness 2.5;
+    maxConcave 70;
+
+    minVol 1e-16;
+    minTetQuality 1e-20;
+    minArea -1;
+    minTwist 0.01;
+    minDeterminant 0.005;
+    minFaceWeight 0.05;
+    minVolRatio 0.05;
+    minTriangleTwist -1;
+
+    nSmoothScale 6;
+    errorReduction 0.7;
+}
+
+//---------------------------------------------------------------------------//
+
+debug 0;
+mergeTolerance 1e-6;
+
+// ************************************************************************* //

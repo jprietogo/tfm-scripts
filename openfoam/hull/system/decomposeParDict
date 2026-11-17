@@ -1,0 +1,33 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  13
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      decomposeParDict;
+}
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+numberOfSubdomains 64;
+
+method          scotch;
+
+//hierarchicalCoeffs
+//{
+    // Descomposición anisotrópica adaptada a geometría del dominio
+    // Dominio: 550m (x) x 300m (y) x 106m (z)
+    // Ratio: 5.2 : 2.8 : 1
+
+//    n		(4 4 2);	// 8x2x2 = 32 subdominios
+
+//    order	xyz;
+//    delta	0.001;
+//}
+
+// ************************************************************************* //
